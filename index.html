@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanzas RPG - Juego de Rol</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  body {
+    margin: 0;
+    background: radial-gradient(circle at top, #0d1b2a, #000);
+    font-family: 'Press Start 2P', cursive;
+    color: white;
+    text-align: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  h1 {
+    color: #ffcc00;
+    text-shadow: 0 0 10px #ff9900;
+    margin-top: 40px;
+  }
+
+  .roles {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 40px;
+    margin-top: 50px;
+  }
+
+  .role-card {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid #00ffff;
+    border-radius: 20px;
+    padding: 20px;
+    width: 200px;
+    cursor: pointer;
+    box-shadow: 0 0 20px #00ffff;
+    transition: 0.3s;
+  }
+
+  .role-card:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 40px #ffcc00;
+  }
+
+  #game {
+    display: none;
+    margin-top: 50px;
+  }
+
+  #playerTitle {
+    color: #ffcc00;
+    font-size: 20px;
+    text-shadow: 0 0 20px #ff9900;
+  }
+
+  .stats-box {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 20px;
+    box-shadow: 0 0 15px #00ffff;
+  }
+
+  .stat {
+    margin: 10px;
+    text-align: left;
+  }
+
+  .bar {
+    width: 200px;
+    height: 12px;
+    background: #333;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+
+  .fill {
+    height: 100%;
+    transition: width 0.5s;
+  }
+
+  .energy-fill { background: #00ffff; }
+    .rep-fill { background: #ffcc00; }
+    .xp-fill { background: #ff66ff; }
+
+  button {
+    font-family: 'Press Start 2P', cursive;
+    background: #00ffff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    background: #ffcc00;
+    transform: scale(1.1);
+  }
+
+  #log {
+    margin-top: 30px;
+    background: rgba(0,0,0,0.7);
+    padding: 20px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 10px;
+    font-size: 12px;
+    text-align: left;
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<!-- PANTALLA DE SELECCIÓN -->
+<div id="selection-screen">
+  <h1>Selecciona tu Rol Financiero</h1>
+  <div class="roles">
+    <div class="role-card" onclick="selectRole('Yamile', 'Inversionista', 10000, 50, 20)">
+      <h3>💼 Yamile</h3>
+      <p>Inversionista<br>💰 Alta capacidad de inversión</p>
+    </div>
+    <div class="role-card" onclick="selectRole('Vanessa', 'Emprendedora', 5000, 100, 30)">
+      <h3>🚀 Vanessa</h3>
+      <p>Emprendedora<br>⚡ Alta energía inicial</p>
+    </div>
+    <div class="role-card" onclick="selectRole('Carlos', 'Visionario', 7000, 70, 100)">
+      <h3>💡 Carlos</h3>
+      <p>Visionario<br>🌟 Gran reputación</p>
+    </div>
+  </div>
+</div>
+
+<!-- JUEGO -->
+<div id="game">
+  <h2 id="playerTitle"></h2>
+
+  <div class="stats-box">
+    <div class="stat">💰 Capital: <span id="capital"></span></div>
+    <div class="stat">⚡ Energía: <div class="bar"><div class="fill energy-fill" id="energyBar"></div></div></div>
+    <div class="stat">🌟 Reputación: <div class="bar"><div class="fill rep-fill" id="repBar"></div></div></div>
+    <div class="stat">🎯 Nivel: <span id="nivel"></span> | XP: <div class="bar"><div class="fill xp-fill" id="xpBar"></div></div></div>
+  </div>
+
+  <div id="actions">
+    <button onclick="action('invertir')">💸 Invertir</button>
+    <button onclick="action('ahorrar')">🏦 Ahorrar</button>
+    <button onclick="action('negociar')">🤝 Negociar</button>
+    <button onclick="volver()">↩️ Cambiar Rol</button>
+  </div>
+
+  <div id="log"></div>
+</div>
+
+<audio id="bg-music" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4cc4ab2e5.mp3?filename=retro-game-music-117901.mp3" loop></audio>
+
+<script>
+  let jugador = {};
+  let xp = 0, nivel = 1;
+  const music = document.getElementById('bg-music');
+  music.volume = 0.3;
+  music.play();
+
+  function selectRole(nombre, rol, dinero, energia, reputacion) {
+    jugador = { nombre, rol, dinero, energia, reputacion };
+    xp = 0;
+    nivel = 1;
+    document.getElementById('selection-screen').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    actualizarPantalla();
+    log(`🧠 ${nombre} ha comenzado su aventura como ${rol}!`);
+  }
+
+  function actualizarPantalla() {
+    document.getElementById('playerTitle').innerText = `${jugador.nombre} – ${jugador.rol}`;
+    document.getElementById('capital').innerText = `$${jugador.dinero}`;
+    document.getElementById('energyBar').style.width = `${jugador.energia}%`;
+    document.getElementById('repBar').style.width = `${jugador.reputacion > 100 ? 100 : jugador.reputacion}%`;
+    document.getElementById('xpBar').style.width = `${(xp % 100)}%`;
+    document.getElementById('nivel').innerText = nivel;
+  }
+
+  function log(msg) {
+    const logDiv = document.getElementById('log');
+    logDiv.innerHTML = "🗨️ " + msg + "<br>" + logDiv.innerHTML;
+  }
+
+  function action(tipo) {
+    if (jugador.energia <= 0) {
+      log("😴 No tienes energía, necesitas descansar.");
+      return;
+    }
+
+    let cambio = Math.floor(Math.random() * 1500) + 500;
+    let mensaje = "";
+    jugador.energia -= 10;
+    xp += 15;
+
+    if (tipo === "invertir") {
+      const exito = Math.random() > 0.4;
+      if (exito) {
+        jugador.dinero += cambio;
+        jugador.reputacion += 3;
+        mensaje = `💰 ¡Tu inversión fue exitosa! Ganaste $${cambio}.`;
+      } else {
+        jugador.dinero -= cambio;
+        jugador.reputacion -= 5;
+        mensaje = `💸 Tu inversión falló. Perdiste $${cambio}.`;
+      }
+    }
+
+    if (tipo === "ahorrar") {
+      let interes = Math.floor(jugador.dinero * 0.05);
+      jugador.dinero += interes;
+      mensaje = `🏦 Has ahorrado sabiamente y ganaste $${interes} en intereses.`;
+    }
+
+    if (tipo === "negociar") {
+      const rep = Math.floor(Math.random() * 10) + 5;
+      jugador.reputacion += rep;
+      mensaje = `🤝 Negociaste con éxito. Tu reputación aumentó ${rep} puntos.`;
+    }
+
+    if (xp >= 100) {
+      nivel++;
+      xp = 0;
+      jugador.energia += 20;
+      log(`🎉 ¡Subiste al nivel ${nivel}! Recuperas energía.`);
+    }
+
+    if (jugador.energia > 100) jugador.energia = 100;
+    if (jugador.reputacion > 150) jugador.reputacion = 150;
+    if (jugador.dinero <= 0) {
+      log(`💀 Has perdido todo tu dinero. Fin del juego.`);
+      document.getElementById('actions').style.display = 'none';
+    }
+
+    actualizarPantalla();
+    log(mensaje);
+  }
+
+  function volver() {
+    document.getElementById('selection-screen').style.display = 'block';
+    document.getElementById('game').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
